@@ -2,6 +2,7 @@
 # ## ウェブからの注文数を分析
 # ### 1. データの読み込み
 # %%
+from numpy.core.defchararray import join
 import pandas as pd
 # %%
 # csvファイルの読み込みとデータの先頭5列の表示
@@ -43,3 +44,63 @@ join_data.head()
 # %% [markdown]
 # ## マスターデータの結合（ジョイン）
 # %%
+join_data = pd.merge(join_data, customer_master, on = 'customer_id', how = 'left')
+join_data = pd.merge(join_data, item_master, on = 'item_id', how = 'left')
+join_data.head()
+# %%
+# joinデータにデータを追加
+join_data['price'] = join_data['quantity'] * join_data['item_price']
+join_data[['price']].tail()
+# %%
+# 確認
+print(join_data['price'].sum() == transaction['price'].sum())
+# %% [markdown]
+# ## 記述統計を行う
+# %%
+join_data.describe()
+print(join_data['payment_date'].min())
+print(join_data['payment_date'].max())
+# %%
+# 各列における欠損値の合計
+join_data.isnull().sum()
+# %%
+# データフレームにひとつでも欠損値が含まれるか？
+join_data.isna().any().any()
+# %% [markdown]
+# ## データフレームの各データ型を確認・変換する 
+# %%
+# 全体の一覧
+join_data.dtypes
+# %%
+# 個別で確認
+join_data.dtypes[['payment_date']]
+# %%
+# データ型の変換
+join_data['payment_date'] = pd.to_datetime(join_data['payment_date'])
+join_data['payment_month'] = join_data['payment_date'].dt.strftime('%Y%m') # dt以下の部分で列全体に任意の時刻表示（文字型）を適用
+join_data[['payment_date', 'payment_month']]
+# %% [markdown]
+# ## 月別の集計（groupby）
+# %%
+# 月別の販売数と価格
+join1 = join_data.groupby('payment_month').sum()[['quantity', 'price']]
+# %%
+join_data.groupby(['payment_month', 'item_name']).sum()[['price', 'quantity']]
+# %% [markdown]
+# ## ピボットテーブルによる集計
+# %%
+pd.pivot_table(join_data, index = 'item_name', columns = 'payment_month', values = ['price', 'quantity'], aggfunc = 'sum')
+# %% [markdown]
+# ## データの可視化
+# %%
+import matplotlib.pyplot as plt
+
+# データの整形
+graph_data = pd.pivot_table(join_data, index = 'payment_month', columns = 'item_name', values = 'price', aggfunc = 'sum')
+
+plt.plot(list(graph_data.index), graph_data['PC-A'], label = 'PC-A')
+plt.plot(list(graph_data.index), graph_data['PC-B'], label = 'PC-B')
+plt.plot(list(graph_data.index), graph_data['PC-C'], label = 'PC-C')
+plt.plot(list(graph_data.index), graph_data['PC-D'], label = 'PC-D')
+plt.plot(list(graph_data.index), graph_data['PC-E'], label = 'PC-E')
+plt.legend()
