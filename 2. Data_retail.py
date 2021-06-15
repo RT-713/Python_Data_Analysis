@@ -48,4 +48,57 @@ for trg in list(uriage_data.loc[flg_is_null, 'item_name'].unique()):
 uriage_data.head()
 # %%
 uriage_data['item_price'].isnull().sum() # 欠損値補完の確認
+# %% [markdown]
+# ## 顧客名の記載方法を統一
 # %%
+kokyaku_data.head()
+# %%
+# 全角・半角スペースの削除処理
+kokyaku_data['顧客名'] = kokyaku_data['顧客名'].str.replace('　', '')
+kokyaku_data['顧客名'] = kokyaku_data['顧客名'].str.replace(' ', '')
+kokyaku_data.head()
+# %% [markdown]
+# ## 登録日の修正
+# %%
+# 登録日が日付でない（数値となっている）数の算出
+flg_is_serial = kokyaku_data['登録日'].astype('str').str.isdigit()
+flg_is_serial.sum()
+# %%
+fromSerial = pd.to_timedelta(kokyaku_data.loc[flg_is_serial, '登録日'].astype(float), unit = 'D') + pd.to_datetime('1900/01/01')  # loc関数はbool型で指定することも可能（Trueを引っ張ってくる）
+fromSerial
+print(fromSerial.count())
+# %%
+# 登録日の数値データが正常に変換されたことを確認
+flg_is_serial = kokyaku_data['登録日'].astype('str').str.isdigit()
+flg_is_serial.sum()
+# %%
+fromString = pd.to_datetime(kokyaku_data.loc[~flg_is_serial, '登録日']) # Falseのデータをpandasのデータタイム型へ変換
+fromString
+print(fromString.count())
+# %%
+# データの型と表記を統一した各登録日のデータをconcatで統合する
+kokyaku_data['登録日'] = pd.concat([fromSerial, fromString])
+kokyaku_data
+# %%
+kokyaku_data['登録年月'] = kokyaku_data['登録日'].dt.strftime('%Y%m')
+rslt = kokyaku_data.groupby('登録年月').count()['顧客名']
+rslt
+# %%
+len(kokyaku_data) # データの確認
+# %% [markdown]
+# ## データの結合
+# %%
+# 顧客名をキーにして結合
+join_data = pd.merge(uriage_data, kokyaku_data, left_on = 'customer_name', right_on = '顧客名', how = 'left')
+join_data = join_data.drop('customer_name', axis = 1) # 顧客名が重複しているので削除
+join_data
+# %% [markdown]
+# ## データの最終的な整形（列の並びをわかりやすく）
+# %%
+# 列の並びを指定
+dump_data = join_data[['purchase_date', 'purchase_month', 'item_name', 'item_price', '顧客名', 'かな', '地域', 'メールアドレス', '登録日']]
+dump_data
+# %% [markdown]
+# ## 整形したデータの出力（csv）
+# %%
+dump_data.to_csv('dump_data.csv', index = False)
