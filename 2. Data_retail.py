@@ -101,4 +101,26 @@ dump_data
 # %% [markdown]
 # ## 整形したデータの出力（csv）
 # %%
+# .pyファイルと同一の階層にcsvファイルの出力（インデックスは含めず）
 dump_data.to_csv('dump_data.csv', index = False)
+# %% [markdown]
+# ## データの集計
+# %%
+import_data = pd.read_csv('./dump_data.csv')
+import_data
+# %%
+# 購入年月と商品の集計
+byItem = import_data.pivot_table(index = 'purchase_month', columns = 'item_name', aggfunc = 'size', fill_value = 0)
+byItem
+# %%
+# 購入年月と売上金額の集計
+byPrice = import_data.pivot_table(index = 'purchase_month', columns = 'item_name', values = 'item_price', aggfunc = 'sum', fill_value = 0)
+byPrice
+# %%
+# 購入年月と各顧客における購入数の集計
+byCustomer = import_data.pivot_table(index = 'purchase_month', columns = '顧客名', aggfunc = 'size', fill_value = 0)
+byCustomer
+# %%
+# 購入年月と地域別販売数の集計
+byRegion = import_data.pivot_table(index = 'purchase_month', columns = '地域', aggfunc = 'size', fill_value = 0)
+byRegion
