@@ -112,3 +112,41 @@ pos['nodeD'] = (1, 0)
 
 # with_labels引数を指定することで各ノードにラベルを付与できる
 nx.draw(G, pos, with_labels = True) 
+# %% [markdown]
+# ## ルートの重みづけ（ノード間の調整）
+# %%
+# ノードの太さを重みに応じて付与
+
+# データ読み込み
+df_w = pd.read_csv('./data4/network_weight.csv')
+df_p = pd.read_csv('./data4/network_pos.csv')
+
+# 再度インスタンス化
+G = nx.Graph()
+
+# エッジの重みのリスト化
+size = 10
+edge_weights = []
+for i in range(len(df_w)):
+    for j in range(len(df_w.columns)):
+        edge_weights.append(df_w.iloc[i][j] * size)
+
+# 頂点の設定
+for i in range(len(df_w.columns)):
+    G.add_node(df_w.columns[i])
+
+# 辺の設定
+for i in range(len(df_w.columns)):
+    for j in range(len(df_w.columns)):
+        G.add_edge(df_w.columns[i],df_w.columns[j])
+
+# 座標の設定
+pos = {}
+for i in range(len(df_w.columns)):
+    node = df_w.columns[i]
+    pos[node] = (df_p[node][0],df_p[node][1])
+
+# 引数を指定して表示
+nx.draw(G, pos, with_labels = True, font_size = 16, node_size = 1000, node_color = 'k', font_color = 'w', width = edge_weights)
+plt.show()
+# %%
