@@ -121,7 +121,7 @@ nx.draw(G, pos, with_labels = True)
 df_w = pd.read_csv('./data4/network_weight.csv')
 df_p = pd.read_csv('./data4/network_pos.csv')
 
-# 再度インスタンス化
+# インスタンス化
 G = nx.Graph()
 
 # エッジの重みのリスト化
@@ -149,4 +149,131 @@ for i in range(len(df_w.columns)):
 # 引数を指定して表示
 nx.draw(G, pos, with_labels = True, font_size = 16, node_size = 1000, node_color = 'k', font_color = 'w', width = edge_weights)
 plt.show()
+# %% [markdown]
+# ## 輸送ルートの情報をもとにネットワークを可視化
+# %%
+df_tr = pd.read_csv('./data4/trans_route.csv', index_col = '工場')
+df_tr
+# %%
+df_pos = pd.read_csv('./data4/trans_route_pos.csv')
+df_pos
+# %%
+# データの可視化
+# インスタンス化
+G = nx.Graph()
+
+# 頂点の設定
+for i in range(len(df_pos.columns)):
+    G.add_node(df_pos.columns[i])
+
+
+# 辺の設定&エッジの重みのリスト化
+num_pre = 0
+edge_weights = []
+size = 0.1
+for i in range(len(df_pos.columns)):
+    for j in range(len(df_pos.columns)):
+        if not (i==j):
+            # 辺の追加
+            G.add_edge(df_pos.columns[i],df_pos.columns[j])
+            # エッジの重みの追加
+            if num_pre<len(G.edges):
+                num_pre = len(G.edges)
+                weight = 0
+                if (df_pos.columns[i] in df_tr.columns)and(df_pos.columns[j] in df_tr.index):
+                    if df_tr[df_pos.columns[i]][df_pos.columns[j]]:
+                        weight = df_tr[df_pos.columns[i]][df_pos.columns[j]]*size
+                elif(df_pos.columns[j] in df_tr.columns)and(df_pos.columns[i] in df_tr.index):
+                    if df_tr[df_pos.columns[j]][df_pos.columns[i]]:
+                        weight = df_tr[df_pos.columns[j]][df_pos.columns[i]]*size
+                edge_weights.append(weight)
+                
+
+# 座標の設定
+pos = {}
+for i in range(len(df_pos.columns)):
+    node = df_pos.columns[i]
+    pos[node] = (df_pos[node][0],df_pos[node][1])
+    
+# 描画
+nx.draw(G, pos, with_labels=True,font_size=16, node_size = 1000, node_color='k', font_color='w', width=edge_weights)
+
+# 表示
+plt.show()
+# %% [markdown]
+# ## 輸送ルートの最適化のために関数を作成
+# %%
+df_tc = pd.read_csv('./data4/trans_cost.csv', index_col = '工場')
+df_tc
+# %%
+def trans_cost(df_tr, df_tc):
+    cost = 0
+    for i in range(len(df_tc.index)):
+        for j in range(len(df_tr.columns)):
+            cost += df_tr.iloc[i][j] * df_tc.iloc[i][j]
+    return cost
+
+print(f'総輸送コスト：{trans_cost(df_tr, df_tc)}')
+# %% [markdown]
+# ## 総輸送コストを下げるために制約条件を作成する．
+# %%
+df_demand = pd.read_csv('./data4/demand.csv')
+df_demand
+# %%
+df_supply = pd.read_csv('./data4/supply.csv')
+df_supply
+# %%
+# 需要側の制約条件
+for i in range(len(df_demand.columns)):
+    temp_sum = sum(df_tr[df_demand.columns[i]])
+    print(str(df_demand.columns[i])+"への輸送量:"+str(temp_sum)+" (需要量:"+str(df_demand.iloc[0][i])+")")
+    if temp_sum>=df_demand.iloc[0][i]:
+        print("需要量を満たしています．")
+    else:
+        print("需要量を満たしていません．輸送ルートを再計算して下さい．")
+
+# 供給側の制約条件
+for i in range(len(df_supply.columns)):
+    temp_sum = sum(df_tr.loc[df_supply.columns[i]])
+    print(str(df_supply.columns[i])+"からの輸送量:"+str(temp_sum)+" (供給限界:"+str(df_supply.iloc[0][i])+")")
+    if temp_sum<=df_supply.iloc[0][i]:
+        print("供給限界の範囲内です．")
+    else:
+        print("供給限界を超過しています．輸送ルートを再計算して下さい．")
+# %% [markdown]
+# ## 輸送ルートの変更で関数の変化を確認する．
+# %%
+# 新しく設定した輸送ルートの読み込み
+df_tr_new = pd.read_csv('./data4/trans_route_new.csv', index_col="工場")
+df_tr_new
+# %%
+import numpy as np
+
+# 総輸送コスト再計算 
+print("総輸送コスト(変更後):"+str(trans_cost(df_tr_new,df_tc)))
+
+# 制約条件を満たす場合は1，そうでない場合は0を付与する
+# 需要側
+def condition_demand(df_tr,df_demand):
+    flag = np.zeros(len(df_demand.columns))
+    for i in range(len(df_demand.columns)):
+        temp_sum = sum(df_tr[df_demand.columns[i]])
+        if (temp_sum >= df_demand.iloc[0][i]):
+            flag[i] = 1
+    return flag
+            
+# 供給側
+def condition_supply(df_tr,df_supply):
+    flag = np.zeros(len(df_supply.columns))
+    for i in range(len(df_supply.columns)):
+        temp_sum = sum(df_tr.loc[df_supply.columns[i]])
+        if temp_sum <= df_supply.iloc[0][i]:
+            flag[i] = 1
+    return flag
+
+print("需要条件計算結果:"+str(condition_demand(df_tr_new,df_demand)))
+print("供給条件計算結果:"+str(condition_supply(df_tr_new,df_supply)))
+# %% [markdown]
+# - 総輸送コストはわずかに削減できたが，2番目の供給条件が満たされていない．
+# 最適化の計算は試行錯誤する必要あり．
 # %%
