@@ -118,4 +118,68 @@ def condition_supply(df_tr,df_supply):
 
 print('需要条件計算結果:'+str(condition_demand(df_tr_sol,df_demand)))
 print('供給条件計算結果:'+str(condition_supply(df_tr_sol,df_supply)))
+# %% [markdown]
+# ## 生産計画において利益を計算する
+# %%
+# データの読み込み
+df_material = pd.read_csv('./data5/product_plan_material.csv', index_col='製品')
+df_material
+# %%
+df_profit = pd.read_csv('./data5/product_plan_profit.csv', index_col='製品')
+df_profit
+# %%
+df_stock = pd.read_csv('./data5/product_plan_stock.csv', index_col='項目')
+df_stock
+# %%
+df_plan = pd.read_csv('./data5/product_plan.csv', index_col='製品')
+df_plan
+# %%
+# 利益を計算する関数＝目的関数
+def product_plan(df_profit, df_plan):
+    profit = 0
+    for i in range(len(df_profit.index)):
+        for j in range(len(df_plan.columns)):
+            profit += df_profit.iloc[i][j] * df_plan.iloc[i][j]
+    return profit
+
+print(f'総利益：{product_plan(df_profit, df_plan)}')
+# %% [markdown]
+# ## 生産最適化問題を考える
+# %%
+# 目的関数を最大化する計算を実装
+from pulp import LpVariable, lpSum, value
+from ortoolpy import model_max, addvars, addvals
+
+df = df_material.copy()
+inv = df_stock
+
+m = model_max()
+v1 = {(i):LpVariable('v%d'%(i),lowBound=0) for i in range(len(df_profit))}
+m += lpSum(df_profit.iloc[i]*v1[i] for i in range(len(df_profit)))
+for i in range(len(df_material.columns)):
+    m += lpSum(df_material.iloc[j,i]*v1[j] for j in range(len(df_profit)) ) <= df_stock.iloc[:,i]
+m.solve()
+
+df_plan_sol = df_plan.copy()
+for k,x in v1.items():
+    df_plan_sol.iloc[k] = value(x)
+
+print(df_plan_sol)
+print(f'総利益：{value(m.objective)}')
+# %% [markdown]
+# ## 最適化された内容を制約条件を踏まえて検討する
+# %%
+# 制約条件を計算する関数
+def condition_stock(df_plan, df_material, df_stock):
+    flag = np.zeros(len(df_material.columns))
+    for i in range(len(df_material.columns)):  
+        temp_sum = 0
+        for j in range(len(df_material.index)):  
+            temp_sum = temp_sum + df_material.iloc[j][i] * float(df_plan.iloc[j])
+        if (temp_sum <= float(df_stock.iloc[0][i])):
+            flag[i] = 1
+        print(df_material.columns[i]+'  使用量:'+str(temp_sum)+', 在庫:'+str(float(df_stock.iloc[0][i])))
+    return flag
+
+print(f'制約条件の計算結果：{condition_stock(df_plan_sol,df_material,df_stock)}')
 # %%
