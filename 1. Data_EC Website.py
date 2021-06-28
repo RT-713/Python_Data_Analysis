@@ -36,6 +36,8 @@ print(f'{len(transaction_1)} + {len(transaction_2)} = {len(transaction)}')
 # %%
 # transaction_detail_1と2のデータを結合
 transaction_detail_2 = pd.read_csv('./data/data1/transaction_detail_2.csv')
+transaction_detail_2.head()
+# %%
 transaction_detail = pd.concat([transaction_detail_1, transaction_detail_2], ignore_index = True)
 print(f'transaction_detail_1：{transaction_detail_1.shape} \ntransaction_detail_2：{transaction_detail_2.shape}')
 transaction_detail.shape
@@ -107,4 +109,6 @@ plt.plot(list(graph_data.index), graph_data['PC-B'], label = 'PC-B')
 plt.plot(list(graph_data.index), graph_data['PC-C'], label = 'PC-C')
 plt.plot(list(graph_data.index), graph_data['PC-D'], label = 'PC-D')
 plt.plot(list(graph_data.index), graph_data['PC-E'], label = 'PC-E')
+
 plt.legend()
+plt.show()

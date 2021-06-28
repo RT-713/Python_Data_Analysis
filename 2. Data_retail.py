@@ -5,10 +5,10 @@ import pandas as pd
 # %% [markdown]
 # ## 売上および顧客データの読み込み
 # %%
-uriage_data = pd.read_csv('data2/uriage.csv')
+uriage_data = pd.read_csv('./data/data2/uriage.csv')
 uriage_data.head()
 # %%
-kokyaku_data = pd.read_excel('data2/kokyaku_daicho.xlsx')
+kokyaku_data = pd.read_excel('./data/data2/kokyaku_daicho.xlsx')
 kokyaku_data.head()
 # %%
 # 表記が統一されていないデータの確認
