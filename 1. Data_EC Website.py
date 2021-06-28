@@ -9,19 +9,22 @@ import pandas as pd
 customer_master = pd.read_csv('./data/data1/customer_master.csv')
 customer_master.head()
 # %%
-# 各csvファイルの読み込み
+# csvファイルの読み込み
 item_master = pd.read_csv('./data/data1/item_master.csv')
 item_master.head()
 # %%
+# csvファイルの読み込み
 transaction_1 = pd.read_csv('./data/data1/transaction_1.csv')
 transaction_1.head()
 # %%
+# csvファイルの読み込み
 transaction_detail_1 = pd.read_csv('./data/data1/transaction_detail_1.csv')
 transaction_1.head()
 # %% [markdown]
 # ### 2. データの結合（ユニオン）
 # 今回のデータ結合ではデータを縦方向に結合（行を追加）
 # %%
+# csvファイルの読み込み
 transaction_2 = pd.read_csv('./data/data1/transaction_2.csv')
 transaction_2.head()
 # %%
@@ -64,7 +67,7 @@ print(join_data['payment_date'].max())
 # 各列における欠損値の合計
 join_data.isnull().sum()
 # %%
-# データフレームにひとつでも欠損値が含まれるか？
+# データフレームにひとつでも欠損値が含まれるか確認
 join_data.isna().any().any()
 # %% [markdown]
 # ## データフレームの各データ型を確認・変換する 
@@ -98,6 +101,7 @@ import matplotlib.pyplot as plt
 # データの整形
 graph_data = pd.pivot_table(join_data, index = 'payment_month', columns = 'item_name', values = 'price', aggfunc = 'sum')
 
+# 図の表示
 plt.plot(list(graph_data.index), graph_data['PC-A'], label = 'PC-A')
 plt.plot(list(graph_data.index), graph_data['PC-B'], label = 'PC-B')
 plt.plot(list(graph_data.index), graph_data['PC-C'], label = 'PC-C')
