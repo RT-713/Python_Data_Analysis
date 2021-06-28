@@ -6,17 +6,17 @@ from numpy.core.defchararray import join
 import pandas as pd
 # %%
 # csvファイルの読み込みとデータの先頭5列の表示
-customer_master = pd.read_csv('data/customer_master.csv')
+customer_master = pd.read_csv('./data/data1/customer_master.csv')
 customer_master.head()
 # %%
 # 各csvファイルの読み込み
-item_master = pd.read_csv('data/item_master.csv')
+item_master = pd.read_csv('./data/data1/item_master.csv')
 item_master.head()
 # %%
-transaction_1 = pd.read_csv('data/transaction_1.csv')
+transaction_1 = pd.read_csv('./data/data1/transaction_1.csv')
 transaction_1.head()
 # %%
-transaction_detail_1 = pd.read_csv('data/transaction_detail_1.csv')
+transaction_detail_1 = pd.read_csv('./data/data1/transaction_detail_1.csv')
 transaction_1.head()
 # %% [markdown]
 # ### 2. データの結合（ユニオン）
