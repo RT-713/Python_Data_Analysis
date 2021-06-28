@@ -22,7 +22,7 @@ transaction_1.head()
 # ### 2. データの結合（ユニオン）
 # 今回のデータ結合ではデータを縦方向に結合（行を追加）
 # %%
-transaction_2 = pd.read_csv('data/transaction_2.csv')
+transaction_2 = pd.read_csv('./data/data1/transaction_2.csv')
 transaction_2.head()
 # %%
 # concat関数で2つのデータフレームを結合（インデックスは含めず結合）
